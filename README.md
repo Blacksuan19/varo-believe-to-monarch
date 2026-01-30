@@ -62,5 +62,4 @@ varo-to-monarch ./statements --workers 4
 varo-to-monarch ./statements --no-include-source-file
 ```
 
-If you get errors about PDF extraction, you likely need Ghostscript installed
-(Camelot dependency).
+See `varo-to-monarch --help` for all options.

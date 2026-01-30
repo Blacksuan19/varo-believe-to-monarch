@@ -1,25 +1,39 @@
-"""PDF extraction logic using Camelot and pdfplumber."""
+"""PDF extraction logic using PyMuPDF and pdfplumber."""
+
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-import camelot
+import fitz  # PyMuPDF
 import pandas as pd
 import pdfplumber
 
 from .constants import DATE_RE, SECTION_ORDER
-from .utils import (
-    clean,
-    is_date,
-    is_probable_amount_token,
-    parse_amount,
-)
+from .utils import clean, is_date, is_probable_amount_token, parse_amount
 
 
 @dataclass(frozen=True)
 class Heading:
     name: str
     top: float
+
+
+def is_secured_account_transaction(description: str) -> bool:
+    """Check if a transaction description indicates a Secured Account transaction.
+
+    Secured Account transactions are only:
+    - Transfers from Secured Account to Believe Card ("Trf from Vault to Charge C Bal")
+    - Deposits into Secured Account ("Move Your Pay - Chk to Believe")
+    - Transfers from Secured Account to Checking ("Transfer from Vault to DDA")
+    """
+    desc_lower = description.lower()
+    patterns = [
+        "trf from vault to charge c bal",
+        "transfer from varo believe secured",
+        "move your pay - chk to believe",
+        "transfer from vault to dda",
+    ]
+    return any(pattern in desc_lower for pattern in patterns)
 
 
 def row_to_raw_fields(cells: list[str]) -> tuple[str, str, str]:
@@ -54,104 +68,86 @@ def row_to_raw_fields(cells: list[str]) -> tuple[str, str, str]:
 
 def extract_text_based_transactions(pdf_path: str) -> pd.DataFrame:
     """
-    Extract transactions from sections that Camelot misses using pdfplumber text parsing.
-    Specifically targets 'Payments and Credits' and 'Secured Account Transactions'.
+    Extract transactions using pdfplumber text parsing as fallback/supplement to PyMuPDF.
+    This catches transactions that PyMuPDF's table detection might miss.
+
+    Extracts all lines that look like transactions and infers their section from context.
     """
     raw_data: list[dict[str, Any]] = []
     source = Path(pdf_path).name
 
-    # Only extract sections that Camelot can't handle well
-    TARGET_SECTIONS = ["Payments and Credits", "Secured Account Transactions"]
-
     with pdfplumber.open(pdf_path) as pdf:
         for page_num, page in enumerate(pdf.pages, 1):
             text = page.extract_text() or ""
+            lines = text.split("\n")
 
-            for section in TARGET_SECTIONS:
-                if section not in text:
+            # Track current section based on headers we see
+            current_section = "Purchases"  # default, carries across pages
+
+            for i, line in enumerate(lines):
+                line = line.strip()
+                if not line:
                     continue
 
-                # Find section start
-                section_start = text.find(section)
-                if section_start == -1:
+                # Check if this line is a section header
+                for sec in SECTION_ORDER:
+                    if line == sec or line.startswith(f"{sec}\n") or line == f"{sec} ":
+                        current_section = sec
+                        break
+
+                # Check if line starts with a date
+                parts = line.split()
+                if not parts or not DATE_RE.match(parts[0]):
                     continue
 
-                # Extract text after section heading until next section or end
-                remaining = text[section_start + len(section) :]
+                # Skip the statement period header (e.g., "12/18/2025 - 01/18/2026")
+                if len(parts) >= 3 and parts[1] == "-":
+                    continue
 
-                # Find where this section ends (next section heading or end of text)
-                section_end = len(remaining)
-                for other_section in SECTION_ORDER:
-                    if other_section != section:
-                        pos = remaining.find(other_section)
-                        if pos != -1 and pos < section_end:
-                            section_end = pos
+                date = parts[0]
 
-                section_text = remaining[:section_end]
-                lines = section_text.split("\n")
+                # Find amount (last token with $ or looks like money)
+                amount = ""
+                for token in reversed(parts):
+                    if "$" in token or is_probable_amount_token(token):
+                        amount = token
+                        break
 
-                # Parse transactions: look for lines starting with date pattern
-                i = 0
-                while i < len(lines):
-                    line = lines[i].strip()
-                    if not line:
-                        i += 1
-                        continue
+                if not amount:
+                    continue
 
-                    # Check if line starts with a date
-                    parts = line.split()
-                    if not parts or not DATE_RE.match(parts[0]):
-                        i += 1
-                        continue
+                # Description is everything between date and amount
+                desc_parts = []
+                for token in parts[1:]:
+                    if token == amount:
+                        break
+                    desc_parts.append(token)
 
-                    date = parts[0]
-
-                    # Amount is last token with $
-                    amount = ""
-                    for token in reversed(parts):
-                        if "$" in token:
-                            amount = token
-                            break
-
-                    if not amount:
-                        i += 1
-                        continue
-
-                    # Description is everything between date and amount on current line
-                    desc_parts = []
-                    for token in parts[1:]:
-                        if token == amount:
-                            break
-                        desc_parts.append(token)
-
-                    # Check if previous line is a description (doesn't start with date, no table header)
-                    if i > 0:
-                        prev_line = lines[i - 1].strip()
-                        if prev_line and not prev_line.lower().startswith(
-                            ("date", "description", "amount")
+                # Check if previous line is part of description
+                if i > 0:
+                    prev_line = lines[i - 1].strip()
+                    if prev_line and not prev_line.lower() in ("date", "description", "amount"):
+                        prev_parts = prev_line.split()
+                        if (
+                            prev_parts
+                            and not DATE_RE.match(prev_parts[0])
+                            and "$" not in prev_line
+                            and not any(prev_line == sec for sec in SECTION_ORDER)
                         ):
-                            prev_parts = prev_line.split()
-                            if (
-                                prev_parts
-                                and not DATE_RE.match(prev_parts[0])
-                                and "$" not in prev_line
-                            ):
-                                # Previous line is part of description
-                                desc_parts.insert(0, prev_line)
+                            # Previous line is part of description
+                            desc_parts.insert(0, prev_line)
 
-                    description = " ".join(desc_parts).strip()
+                description = " ".join(desc_parts).strip()
 
-                    raw_data.append(
-                        {
-                            "Date": date,
-                            "Merchant": clean(description),
-                            "AmountRaw": amount,
-                            "Section": section,
-                            "SourceFile": source,
-                        }
-                    )
-
-                    i += 1
+                raw_data.append(
+                    {
+                        "Date": date,
+                        "Merchant": clean(description),
+                        "AmountRaw": amount,
+                        "Section": current_section,
+                        "SourceFile": source,
+                    }
+                )
 
     if not raw_data:
         return pd.DataFrame()
@@ -163,78 +159,119 @@ def extract_text_based_transactions(pdf_path: str) -> pd.DataFrame:
     return df[["Date", "Merchant", "AmountParsed", "Section", "SourceFile"]].copy()
 
 
-def extract_transactions_from_pdf(pdf_path: str) -> pd.DataFrame:
+def extract_pymupdf_tables(pdf_path: str) -> pd.DataFrame:
     """
-    Extract transactions, build raw rows with date/desc/amount, merge in pandas.
+    Extract transactions from PDF tables using PyMuPDF.
 
-    Extract transactions from PDF tables using Camelot.
-
-    We rely on the statement structure:
-    - section heading table(s)
-    - followed by transaction table(s) in that section
+    Targets sections where tabular data is present:
+    - Purchases
+    - Fees
+    - Payments and Credits (also captured here if in table format)
+    - Secured Account Transactions
     """
     raw_data: list[dict[str, Any]] = []
     source = Path(pdf_path).name
 
-    # Use stream with row_tol=15 (best results from testing)
-    tables = camelot.read_pdf(
-        pdf_path,
-        pages="all",
-        flavor="stream",
-        row_tol=15,
-    )
+    doc = fitz.open(pdf_path)
+    current_section = "Purchases"  # default section, carries across pages
 
-    current_section = "Purchases"
+    for page_num in range(len(doc)):
+        page = doc[page_num]
 
-    for idx, table in enumerate(tables, start=1):
-        tdf: pd.DataFrame = table.df
-        if tdf is None or tdf.empty:
-            continue
+        # Extract text blocks to track section headers by position
+        text_dict = page.get_text("dict")
+        text_blocks = []
+        for block in text_dict.get("blocks", []):
+            if block.get("type") == 0:  # text block
+                for line in block.get("lines", []):
+                    for span in line.get("spans", []):
+                        text_content = span.get("text", "").strip()
+                        if text_content:
+                            text_blocks.append(
+                                {"text": text_content, "y": span.get("bbox", [0, 0, 0, 0])[1]}
+                            )
 
-        # Process each row
-        for row_num, row in enumerate(tdf.itertuples(index=False), start=1):
-            cells = [clean(c) for c in list(row)]
-            if not any(cells):
-                continue
-
-            # Check if this row is a section heading
-            joined = " ".join(cells).strip()
+        # Find section headers and their Y positions
+        section_y_positions = []
+        for block in text_blocks:
             for sec in SECTION_ORDER:
-                if joined == sec:
+                if block["text"] == sec or sec in block["text"]:
+                    section_y_positions.append((block["y"], sec))
+                    # Update current section when we see a new header
                     current_section = sec
                     break
 
-            # Skip header rows and summary rows
-            jl = joined.lower()
-            if "date" in jl and "description" in jl and "amount" in jl:
-                continue
-            if jl.startswith("total ") or jl.startswith("summary "):
-                continue
-            if joined in SECTION_ORDER:
+        section_y_positions.sort()  # Sort by Y position (top to bottom)
+
+        # Extract tables using PyMuPDF's find_tables
+        tables = page.find_tables()
+
+        for table_num, table in enumerate(tables, start=1):
+            if not table or not table.extract():
                 continue
 
-            date, desc, amount = row_to_raw_fields(cells)
+            extracted = table.extract()
 
-            # Must have at least a date to be a valid transaction row
-            if not is_date(date):
-                continue
+            # Determine which section this table belongs to based on Y position
+            table_bbox = table.bbox
+            table_y = table_bbox[1] if table_bbox else 0
 
-            # Must have an amount
-            if not amount or parse_amount(amount) is None:
-                continue
+            # Find the closest section header BEFORE this table (on this page)
+            table_section = current_section  # Use carry-over section as default
+            for y_pos, sec in section_y_positions:
+                if y_pos <= table_y:
+                    table_section = sec
+                else:
+                    break  # Don't use sections that come after the table
 
-            raw_data.append(
-                {
-                    "SourceFile": source,
-                    "Page": int(getattr(table, "page", 0) or 0),
-                    "Table": idx,
-                    "Row": row_num,
-                    "Section": current_section,
-                    "Date": date,
-                    "Description": desc,
-                    "Amount": amount,
-                }
-            )
+            for row_num, row in enumerate(extracted, start=1):
+                if not row:
+                    continue
+
+                cells = [clean(str(c)) if c else "" for c in row]
+                if not any(cells):
+                    continue
+
+                # Check if this row itself is a section heading
+                joined = " ".join(cells).strip()
+                if joined in SECTION_ORDER:
+                    table_section = joined
+                    current_section = joined  # Update carry-over section
+                    continue
+
+                # Skip header rows and summary rows
+                jl = joined.lower()
+                if "date" in jl and "description" in jl and "amount" in jl:
+                    continue
+                if jl.startswith("total ") or jl.startswith("summary "):
+                    continue
+                if "no activity" in jl:
+                    continue
+
+                date, desc, amount = row_to_raw_fields(cells)
+
+                # Must have at least a date to be a valid transaction row
+                if not is_date(date):
+                    continue
+
+                # Must have an amount
+                if not amount or parse_amount(amount) is None:
+                    continue
+
+                raw_data.append(
+                    {
+                        "SourceFile": source,
+                        "Page": page_num + 1,
+                        "Table": table_num,
+                        "Row": row_num,
+                        "Section": table_section,
+                        "Date": date,
+                        "Description": desc,
+                        "Amount": amount,
+                    }
+                )
+
+    doc.close()
 
     if not raw_data:
         return pd.DataFrame()
@@ -271,16 +308,66 @@ def extract_transactions_from_pdf(pdf_path: str) -> pd.DataFrame:
     merged["AmountParsed"] = merged["AmountRaw"].apply(parse_amount)
     merged = merged.dropna(subset=["AmountParsed"])
 
-    camelot_df = merged[
-        ["Date", "Merchant", "AmountParsed", "Section", "SourceFile"]
-    ].copy()
+    return merged[["Date", "Merchant", "AmountParsed", "Section", "SourceFile"]].copy()
 
-    # Extract text-based transactions for sections Camelot misses
+
+def extract_transactions_from_pdf(pdf_path: str) -> pd.DataFrame:
+    """
+    Extract transactions from PDF using PyMuPDF for tables and pdfplumber for text.
+
+    PyMuPDF handles:
+    - Purchases section
+    - Fees section
+    - Payments and Credits (if in table format)
+    - Secured Account Transactions (if in table format)
+
+    pdfplumber text parsing handles:
+    - Payments and Credits (as fallback)
+    - Secured Account Transactions (as fallback)
+    """
+    # Extract table-based transactions with PyMuPDF
+    pymupdf_df = extract_pymupdf_tables(pdf_path)
+
+    # Extract text-based transactions for sections PyMuPDF might miss
     text_df = extract_text_based_transactions(pdf_path)
 
-    # Combine: Camelot for Purchases/Fees, text parsing for Payments/Secured
-    if not text_df.empty:
-        combined = pd.concat([camelot_df, text_df], ignore_index=True)
+    # Combine: use all PyMuPDF results + text results that PyMuPDF didn't find
+    if not pymupdf_df.empty and not text_df.empty:
+        # Create a set of PyMuPDF transactions for comparison
+        pymupdf_set = set(tuple(x) for x in pymupdf_df[["Date", "Merchant", "AmountParsed"]].values)
+
+        # Find text transactions that aren't in PyMuPDF results
+        text_only = []
+        for _, row in text_df.iterrows():
+            key = (row["Date"], row["Merchant"], row["AmountParsed"])
+            if key not in pymupdf_set:
+                text_only.append(row)
+
+        if text_only:
+            text_only_df = pd.DataFrame(text_only)
+            combined = pd.concat([pymupdf_df, text_only_df], ignore_index=True)
+        else:
+            combined = pymupdf_df
+    elif not text_df.empty:
+        combined = text_df
+    else:
+        combined = pymupdf_df
+
+    if combined.empty:
         return combined
 
-    return camelot_df
+    # Fix section assignment based on transaction description patterns
+    # Secured Account transactions are ONLY specific transfer/deposit types
+    def correct_section(row):
+        if is_secured_account_transaction(row["Merchant"]):
+            return "Secured Account Transactions"
+        # If currently labeled as Secured Account but doesn't match patterns,
+        # it's likely a Purchase that appeared in that section on the PDF
+        elif row["Section"] == "Secured Account Transactions":
+            return "Purchases"
+        else:
+            return row["Section"]
+
+    combined["Section"] = combined.apply(correct_section, axis=1)
+
+    return combined

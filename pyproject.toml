@@ -23,7 +23,7 @@ classifiers = [
     "Topic :: Utilities",
 ]
 
-dependencies = ["camelot-py", "pandas", "pdfplumber", "typer", "rich"]
+dependencies = ["pymupdf", "pandas", "pdfplumber", "typer", "rich"]
 
 [project.optional-dependencies]
 dev = ["black", "ruff", "mypy", "build", "bumpver"]
