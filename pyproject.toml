@@ -34,7 +34,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["black", "ruff", "mypy", "build", "bumpver"]
+dev = ["black", "ruff", "mypy", "build", "bumpver", "pyinstaller"]
 
 [project.urls]
 Homepage = "https://github.com/blacksuan19/varo-to-monarch"

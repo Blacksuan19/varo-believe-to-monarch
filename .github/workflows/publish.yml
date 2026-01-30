@@ -29,7 +29,9 @@ jobs:
       - name: Release wheel package
         uses: softprops/action-gh-release@v1
         with:
-          files: dist/*.whl
+          files: |
+            dist/*.whl
+            dist/*
           generate_release_notes: true
 
       - name: Upload artifact to action
@@ -37,6 +39,56 @@ jobs:
         with:
           name: release-dists
           path: dist/
+
+  build_executables:
+    name: Build Executable for ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            ARTIFACT_NAME: varo-to-monarch-windows.exe
+          - os: macos-latest
+            ARTIFACT_NAME: varo-to-monarch-macos.app.zip
+          - os: ubuntu-latest
+            ARTIFACT_NAME: varo-to-monarch-linux
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-python@v3
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install -U pip
+          pip install .[dev]
+
+      - name: Build with PyInstaller
+        run: |
+          pyinstaller build_gui.spec
+
+      - name: Rename Output (Windows)
+        if: matrix.os == 'windows-latest'
+        run: mv dist/varo-to-monarch.exe dist/${{ matrix.ARTIFACT_NAME }}
+
+      - name: Rename Output (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: mv dist/varo-to-monarch dist/${{ matrix.ARTIFACT_NAME }}
+
+      - name: Zip Bundle (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          cd dist
+          zip -r ${{ matrix.ARTIFACT_NAME }} VaroToMonarch.app
+
+      - name: Upload Release Asset
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: dist/${{ matrix.ARTIFACT_NAME }}
+          generate_release_notes: false
 
   pypi-publish:
     runs-on: ubuntu-latest
