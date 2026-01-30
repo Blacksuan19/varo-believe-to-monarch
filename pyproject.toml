@@ -1,0 +1,62 @@
+[build-system]
+requires = ["setuptools>=45", "wheel", "pip>=21.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "varo-to-monarch"
+version = "0.1.0"
+description = "Convert Varo Bank PDF statements to Monarch Money CSV format"
+readme = "README.md"
+requires-python = ">=3.8"
+authors = [{ name = "blacksuan19", email = "py@aolabs.dev" }]
+keywords = ["varo", "monarch", "bank", "statement", "pdf", "csv", "converter"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: End Users/Desktop",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Office/Business :: Financial",
+    "Topic :: Utilities",
+]
+
+dependencies = ["camelot-py", "pandas", "pdfplumber", "typer", "rich"]
+
+[project.optional-dependencies]
+dev = ["black", "ruff", "mypy", "build", "bumpver"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+
+[project.urls]
+Homepage = "https://github.com/blacksuan19/varo-to-monarch"
+Repository = "https://github.com/blacksuan19/varo-to-monarch"
+Issues = "https://github.com/blacksuan19/varo-to-monarch/issues"
+
+[project.scripts]
+varo-to-monarch = "varo_to_monarch.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["varo_to_monarch"]
+
+
+[tool.bumpver]
+current_version = "0.1.0"
+version_pattern = "MAJOR.MINOR.PATCH"
+commit_message = "Bump version {old_version} -> {new_version}"
+commit = true
+tag = true
+push = false
+
+[tool.bumpver.file_patterns]
+"pyproject.toml" = ['current_version = "{version}"', 'version = "{version}"']
+"varo_to_monarch/__init__.py" = ['__version__ = "{version}"']
+"README.md" = ["PyPi-{version}"]
+
+[tool.setuptools.packages.find]
+# Only package the library code under varo_to_monarch
+include = ["varo_to_monarch*"]
