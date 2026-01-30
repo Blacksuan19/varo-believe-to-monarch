@@ -23,14 +23,18 @@ classifiers = [
     "Topic :: Utilities",
 ]
 
-dependencies = ["pymupdf", "pandas", "pdfplumber", "typer", "rich"]
+dependencies = [
+    "pymupdf",
+    "pandas",
+    "pdfplumber",
+    "typer",
+    "rich",
+    "pyside6",
+    "pymupdf_layout",
+]
 
 [project.optional-dependencies]
 dev = ["black", "ruff", "mypy", "build", "bumpver"]
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-addopts = "-ra"
 
 [project.urls]
 Homepage = "https://github.com/blacksuan19/varo-to-monarch"
@@ -39,6 +43,7 @@ Issues = "https://github.com/blacksuan19/varo-to-monarch/issues"
 
 [project.scripts]
 vtm = "varo_to_monarch.cli:main"
+vtm-gui = "varo_to_monarch.gui:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["varo_to_monarch"]

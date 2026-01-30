@@ -8,7 +8,13 @@ import click
 import pandas as pd
 import typer
 from rich.console import Console
-from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
+from rich.progress import (
+    BarColumn,
+    Progress,
+    SpinnerColumn,
+    TextColumn,
+    TimeElapsedColumn,
+)
 
 from .extractors import extract_transactions_from_pdf
 from .processing import finalize_monarch
@@ -30,9 +36,9 @@ def convert(
     output: Optional[Path] = typer.Option(None, "--output", "-o"),
     pattern: str = typer.Option("*.pdf", "--pattern", "-p"),
     workers: int = typer.Option(default_workers(), "--workers", "-w", min=1),
-    include_source_file: bool = typer.Option(
+    include_file_names: bool = typer.Option(
         True,
-        "--include-source-file/--no-include-source-file",
+        "--include-file-names/--no-include-file-names",
     ),
 ):
     """Convert Varo Bank PDF statements to Monarch Money CSV format.
@@ -42,7 +48,7 @@ def convert(
         output: Output CSV file path (default: <folder>/varo_monarch_combined.csv)
         pattern: Glob pattern for PDF files (default: *.pdf)
         workers: Number of parallel workers (default: auto-detect)
-        include_source_file: Include source filename column in output CSV
+        include_file_names: Include file names column in output CSV
     """
     if folder is None:
         typer.echo(click.get_current_context().get_help())
@@ -85,7 +91,7 @@ def convert(
                     progress.advance(task)
 
     combined = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
-    result = finalize_monarch(combined, include_source_file)
+    result = finalize_monarch(combined, include_file_names)
 
     if result.empty:
         console.print("[red]No transactions extracted[/red]")

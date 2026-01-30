@@ -5,7 +5,7 @@ import pandas as pd
 from .constants import SECTION_SIGN, SECTION_TO_ACCOUNT
 
 
-def finalize_monarch(df: pd.DataFrame, include_source: bool) -> pd.DataFrame:
+def finalize_monarch(df: pd.DataFrame, include_file_names: bool) -> pd.DataFrame:
     """Post-process valid transactions into Monarch-compatible format."""
     if df.empty:
         return df
@@ -23,7 +23,9 @@ def finalize_monarch(df: pd.DataFrame, include_source: bool) -> pd.DataFrame:
         else:  # rule == 0
             return amt  # trust sign from PDF
 
-    df["Amount"] = [apply_sign(a, int(r)) for a, r in zip(df["AmountParsed"], sign_rule)]
+    df["Amount"] = [
+        apply_sign(a, int(r)) for a, r in zip(df["AmountParsed"], sign_rule)
+    ]
 
     df["Merchant Name"] = df["Merchant"]
 
@@ -33,12 +35,17 @@ def finalize_monarch(df: pd.DataFrame, include_source: bool) -> pd.DataFrame:
         "Account",
         "Amount",
     ]
-    if include_source:
+    if include_file_names:
         cols.append("SourceFile")
 
     out = df[cols].copy()
     out["Date"] = pd.to_datetime(out["Date"], format="%m/%d/%Y", errors="coerce")
     out = out.dropna(subset=["Date"])
-    out = out.sort_values(["Date", "SourceFile", "Merchant Name", "Amount"]).copy()
+
+    sort_cols = ["Date", "Merchant Name", "Amount"]
+    if "SourceFile" in out.columns:
+        sort_cols.insert(1, "SourceFile")
+
+    out = out.sort_values(sort_cols).copy()
     out["Date"] = out["Date"].dt.strftime("%m/%d/%Y")
     return out
