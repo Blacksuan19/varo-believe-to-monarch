@@ -55,7 +55,6 @@ push = false
 [tool.bumpver.file_patterns]
 "pyproject.toml" = ['current_version = "{version}"', 'version = "{version}"']
 "varo_to_monarch/__init__.py" = ['__version__ = "{version}"']
-"README.md" = ["PyPi-{version}"]
 
 [tool.setuptools.packages.find]
 # Only package the library code under varo_to_monarch
