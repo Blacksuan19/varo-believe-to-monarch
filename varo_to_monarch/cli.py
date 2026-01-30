@@ -4,6 +4,7 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 from typing import Optional
 
+import click
 import pandas as pd
 import typer
 from rich.console import Console
@@ -13,14 +14,18 @@ from .extractors import extract_transactions_from_pdf
 from .processing import finalize_monarch
 from .utils import default_workers, find_pdfs
 
-app = typer.Typer(help="Convert Varo statements to Monarch CSV.", no_args_is_help=True)
+app = typer.Typer(
+    help="Convert Varo statements to Monarch CSV.",
+    no_args_is_help=True,
+    context_settings={"help_option_names": ["-h", "--help"]},
+)
 console = Console()
 
 
 @app.command()
 def convert(
-    folder: Path = typer.Argument(
-        ..., exists=True, file_okay=False, dir_okay=True, resolve_path=True
+    folder: Optional[Path] = typer.Argument(
+        None, exists=True, file_okay=False, dir_okay=True, resolve_path=True
     ),
     output: Optional[Path] = typer.Option(None, "--output", "-o"),
     pattern: str = typer.Option("*.pdf", "--pattern", "-p"),
@@ -37,8 +42,12 @@ def convert(
         output: Output CSV file path (default: <folder>/varo_monarch_combined.csv)
         pattern: Glob pattern for PDF files (default: *.pdf)
         workers: Number of parallel workers (default: auto-detect)
-        include_source_file: Include source filename in output CSV
+        include_source_file: Include source filename column in output CSV
     """
+    if folder is None:
+        typer.echo(click.get_current_context().get_help())
+        raise typer.Exit(0)
+
     out_csv = output or (folder / "varo_monarch_combined.csv")
     pdfs = find_pdfs(folder, pattern)
     if not pdfs:
