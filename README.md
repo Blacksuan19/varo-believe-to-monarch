@@ -6,7 +6,9 @@ Monarch-ready CSV file in seconds.
 
 ## Features
 
-- 📄 **Hybrid PDF Extraction**: Uses PyMuPDF for table-based extraction and
+- �️ **User-Friendly GUI**: Easy-to-use graphical interface for non-technical
+  users (also available as standalone executables for Windows, macOS, and Linux)
+- �📄 **Hybrid PDF Extraction**: Uses PyMuPDF for table-based extraction and
   pdfplumber for text-based parsing to capture all transactions
 - 🔄 **Parallel Processing**: Process multiple PDFs concurrently with
   customizable worker count for faster conversions
@@ -21,18 +23,29 @@ Monarch-ready CSV file in seconds.
   (Varo Believe Card vs Varo Secured Account)
 - 📝 **Monarch-Ready Output**: Generates CSV files with the exact format
   required by Monarch Money import
-- 🚀 **No External Dependencies**: Pure Python implementation with no
-  Ghostscript or system dependencies required
+- 🚀 **No External Dependencies**: Pure Python implementation with no system
+  dependencies required
 
 ## Installation
 
-### From PyPI
+### Option 1: Standalone Executable (Recommended for Non-Technical Users)
+
+Download the pre-built executable for your operating system from the
+[Releases page](https://github.com/blacksuan19/varo-to-monarch/releases):
+
+- **Windows**: `varo-to-monarch-windows.exe`
+- **macOS**: `varo-to-monarch-macos.app.zip` (extract and run)
+- **Linux**: `varo-to-monarch-linux`
+
+No installation required - just download and run!
+
+### Option 2: Install via pip (For Developers/CLI Users)
 
 ```bash
 pip install varo-to-monarch
 ```
 
-### From Source
+### Option 3: From Source
 
 ```bash
 git clone https://github.com/blacksuan19/varo-to-monarch.git
@@ -42,9 +55,35 @@ pip install .
 
 ## Usage
 
-### Basic Usage
+### Graphical User Interface (GUI)
 
-Convert all PDFs in a folder:
+**Using the standalone executable:**
+
+Simply double-click the downloaded executable file.
+
+**Using the installed package:**
+
+```bash
+vtm-gui
+```
+
+The GUI provides:
+
+1. **Folder selection**: Browse to select your folder containing Varo PDF
+   statements
+2. **Output file selection**: Choose where to save the output CSV (defaults to
+   `varo_monarch_combined.csv` in the input folder)
+3. **Advanced options** (optional):
+   - File pattern filter (e.g., `2024*.pdf` to process only 2024 statements)
+   - Number of parallel workers for faster processing
+   - Option to include/exclude source file names in the output
+
+Click **Convert to Monarch CSV** and watch the progress bar as your statements
+are processed!
+
+### Command Line Interface (CLI)
+
+**Basic Usage** - Convert all PDFs in a folder:
 
 ```bash
 vtm path/to/statements
@@ -80,7 +119,7 @@ vtm path/to/statements --workers 4
 **Exclude source filename column:**
 
 ```bash
-vtm path/to/statements --no-include-source-file
+vtm path/to/statements --no-include-file-names
 ```
 
 **Get help:**
@@ -88,6 +127,13 @@ vtm path/to/statements --no-include-source-file
 ```bash
 vtm --help
 ```
+
+### Which Interface Should I Use?
+
+- **Use the GUI** if you prefer a visual interface or are not comfortable with
+  command-line tools
+- **Use the CLI** if you want to automate conversions, integrate with scripts,
+  or prefer terminal-based workflows
 
 ## Output Format
 
@@ -99,7 +145,7 @@ The generated CSV contains the following columns:
 - **Amount**: Transaction amount (negative for purchases/fees, positive for
   payments/credits)
 - **SourceFile**: Original PDF filename (optional, can be excluded with
-  `--no-include-source-file`)
+  `--no-include-file-names` in CLI or unchecked in GUI)
 
 ## How It Works
 
