@@ -3,7 +3,7 @@
 block_cipher = None
 
 a = Analysis(
-    ['varo_to_monarch/gui.py'],
+    ['run_gui.py'],
     pathex=[],
     binaries=[],
     datas=[],
