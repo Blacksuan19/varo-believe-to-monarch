@@ -38,7 +38,7 @@ Repository = "https://github.com/blacksuan19/varo-to-monarch"
 Issues = "https://github.com/blacksuan19/varo-to-monarch/issues"
 
 [project.scripts]
-varo-to-monarch = "varo_to_monarch.cli:main"
+vtm = "varo_to_monarch.cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["varo_to_monarch"]
