@@ -29,9 +29,7 @@ jobs:
       - name: Release wheel package
         uses: softprops/action-gh-release@v1
         with:
-          files: |
-            dist/*.whl
-            dist/*
+          files: dist/*
           generate_release_notes: true
 
       - name: Upload artifact to action
@@ -42,6 +40,7 @@ jobs:
 
   build_executables:
     name: Build Executable for ${{ matrix.os }}
+    needs: build_wheel
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
