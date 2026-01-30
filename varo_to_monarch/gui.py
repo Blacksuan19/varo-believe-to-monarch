@@ -147,6 +147,13 @@ class VaroToMonarchGUI(QMainWindow):
         title.setStyleSheet("font-size: 24px; font-weight: bold;")
         layout.addWidget(title)
 
+        # Description
+        desc_label = QLabel(
+            "Convert Varo Bank PDF statements to Monarch Money-compatible CSV format."
+        )
+        desc_label.setWordWrap(True)
+        layout.addWidget(desc_label)
+
         # Input Folder
         input_group = QGroupBox("Input")
         input_layout = QGridLayout(input_group)
