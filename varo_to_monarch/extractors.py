@@ -1,6 +1,5 @@
 """PDF extraction logic using PyMuPDF and pdfplumber."""
 
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -10,12 +9,6 @@ import pdfplumber
 
 from .constants import DATE_RE, SECTION_ORDER
 from .utils import clean, is_date, is_probable_amount_token, parse_amount
-
-
-@dataclass(frozen=True)
-class Heading:
-    name: str
-    top: float
 
 
 def is_secured_account_transaction(description: str) -> bool:
@@ -126,7 +119,11 @@ def extract_text_based_transactions(pdf_path: str) -> pd.DataFrame:
                 # Check if previous line is part of description
                 if i > 0:
                     prev_line = lines[i - 1].strip()
-                    if prev_line and not prev_line.lower() in ("date", "description", "amount"):
+                    if prev_line and not prev_line.lower() in (
+                        "date",
+                        "description",
+                        "amount",
+                    ):
                         prev_parts = prev_line.split()
                         if (
                             prev_parts
@@ -188,7 +185,10 @@ def extract_pymupdf_tables(pdf_path: str) -> pd.DataFrame:
                         text_content = span.get("text", "").strip()
                         if text_content:
                             text_blocks.append(
-                                {"text": text_content, "y": span.get("bbox", [0, 0, 0, 0])[1]}
+                                {
+                                    "text": text_content,
+                                    "y": span.get("bbox", [0, 0, 0, 0])[1],
+                                }
                             )
 
         # Find section headers and their Y positions
@@ -334,7 +334,9 @@ def extract_transactions_from_pdf(pdf_path: str) -> pd.DataFrame:
     # Combine: use all PyMuPDF results + text results that PyMuPDF didn't find
     if not pymupdf_df.empty and not text_df.empty:
         # Create a set of PyMuPDF transactions for comparison
-        pymupdf_set = set(tuple(x) for x in pymupdf_df[["Date", "Merchant", "AmountParsed"]].values)
+        pymupdf_set = set(
+            tuple(x) for x in pymupdf_df[["Date", "Merchant", "AmountParsed"]].values
+        )
 
         # Find text transactions that aren't in PyMuPDF results
         text_only = []
