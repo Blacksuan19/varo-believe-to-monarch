@@ -68,9 +68,6 @@ Only process tokens with clear monetary indicators
 # Install for development (environment managed by uv)
 uv pip install .
 
-# Build package
-./build.sh  # Cleans previous builds, runs python -m build
-
 # Version bump (uses bumpver)
 bumpver update --patch  # 0.1.4 → 0.1.5
 
