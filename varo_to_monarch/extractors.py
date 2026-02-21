@@ -69,82 +69,89 @@ def extract_text_based_transactions(pdf_path: str) -> pd.DataFrame:
     raw_data: list[dict[str, Any]] = []
     source = Path(pdf_path).name
 
+    # Flatten all pages into a single line list so prev-line lookups work
+    # across page boundaries (descriptions split at page breaks).
+    all_lines: list[str] = []
+    line_sections: list[str] = []  # section in effect for each line
+
     with pdfplumber.open(pdf_path) as pdf:
-        for page_num, page in enumerate(pdf.pages, 1):
+        current_section = "Purchases"  # carries across pages
+        for page in pdf.pages:
             text = page.extract_text() or ""
-            lines = text.split("\n")
-
-            # Track current section based on headers we see
-            current_section = "Purchases"  # default, carries across pages
-
-            for i, line in enumerate(lines):
+            for line in text.split("\n"):
                 line = line.strip()
-                if not line:
-                    continue
-
-                # Check if this line is a section header
+                # Update section tracking
                 for sec in SECTION_ORDER:
                     if line == sec or line.startswith(f"{sec}\n") or line == f"{sec} ":
                         current_section = sec
                         break
+                all_lines.append(line)
+                line_sections.append(current_section)
 
-                # Check if line starts with a date
-                parts = line.split()
-                if not parts or not DATE_RE.match(parts[0]):
-                    continue
+    for i, line in enumerate(all_lines):
+        if not line:
+            continue
 
-                # Skip the statement period header (e.g., "12/18/2025 - 01/18/2026")
-                if len(parts) >= 3 and parts[1] == "-":
-                    continue
+        # Check if line starts with a date
+        parts = line.split()
+        if not parts or not DATE_RE.match(parts[0]):
+            continue
 
-                date = parts[0]
+        # Skip the statement period header (e.g., "12/18/2025 - 01/18/2026")
+        if len(parts) >= 3 and parts[1] == "-":
+            continue
 
-                # Find amount (last token with $ or looks like money)
-                amount = ""
-                for token in reversed(parts):
-                    if "$" in token or is_probable_amount_token(token):
-                        amount = token
-                        break
+        date = parts[0]
+        current_section = line_sections[i]
 
-                if not amount:
-                    continue
+        # Find amount (last token with $ or looks like money)
+        amount = ""
+        for token in reversed(parts):
+            if "$" in token or is_probable_amount_token(token):
+                amount = token
+                break
 
-                # Description is everything between date and amount
-                desc_parts = []
-                for token in parts[1:]:
-                    if token == amount:
-                        break
-                    desc_parts.append(token)
+        if not amount:
+            continue
 
-                # Check if previous line is part of description
-                if i > 0:
-                    prev_line = lines[i - 1].strip()
-                    if prev_line and not prev_line.lower() in (
-                        "date",
-                        "description",
-                        "amount",
-                    ):
-                        prev_parts = prev_line.split()
-                        if (
-                            prev_parts
-                            and not DATE_RE.match(prev_parts[0])
-                            and "$" not in prev_line
-                            and not any(prev_line == sec for sec in SECTION_ORDER)
-                        ):
-                            # Previous line is part of description
-                            desc_parts.insert(0, prev_line)
+        # Description is everything between date and amount
+        desc_parts = []
+        for token in parts[1:]:
+            if token == amount:
+                break
+            desc_parts.append(token)
 
-                description = " ".join(desc_parts).strip()
+        # Check if previous line is the first fragment of a split description.
+        # The PDF often puts the beginning of the description on the line *before*
+        # the date line (which carries the tail of the description + amount).
+        if i > 0:
+            prev_line = all_lines[i - 1]
+            if prev_line and prev_line.lower() not in (
+                "date",
+                "description",
+                "amount",
+            ):
+                prev_parts = prev_line.split()
+                if (
+                    prev_parts
+                    and not DATE_RE.match(prev_parts[0])
+                    and "$" not in prev_line
+                    and not any(prev_line == sec for sec in SECTION_ORDER)
+                ):
+                    # Previous line is the first part of this description
+                    desc_parts.insert(0, prev_line)
 
-                raw_data.append(
-                    {
-                        "Date": date,
-                        "Merchant": clean(description),
-                        "AmountRaw": amount,
-                        "Section": current_section,
-                        "SourceFile": source,
-                    }
-                )
+        description = " ".join(desc_parts).strip()
+
+        raw_data.append(
+            {
+                "Date": date,
+                "Merchant": clean(description),
+                "AmountRaw": amount,
+                "Section": current_section,
+                "SourceFile": source,
+            }
+        )
 
     if not raw_data:
         return pd.DataFrame()
