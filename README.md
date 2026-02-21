@@ -1,45 +1,41 @@
 # Varo to Monarch
 
-Convert Varo Bank PDF statements to Monarch Money CSV format with ease. No more
-manual data entry - just point the tool at your Varo statements and get a
-Monarch-ready CSV file in seconds.
+Convert Varo Bank PDF statements to Monarch Money CSV format. No more manual
+data entry — point the tool at your Varo statements and get a Monarch-ready CSV
+in seconds.
 
 ## Features
 
-- �️ **User-Friendly GUI**: Easy-to-use graphical interface for non-technical
-  users (also available as standalone executables for Windows, macOS, and Linux)
-- �📄 **Hybrid PDF Extraction**: Uses PyMuPDF for table-based extraction and
-  pdfplumber for text-based parsing to capture all transactions
+- 🖥️ **User-Friendly GUI**: Graphical interface for non-technical users (also
+  available as standalone executables)
+- 📄 **Hybrid PDF Extraction**: Uses PyMuPDF for table-based extraction and
+  pdfplumber for text-based parsing to capture all transactions, including
+  multi-line descriptions that span page boundaries
 - 🔄 **Parallel Processing**: Process multiple PDFs concurrently with
-  customizable worker count for faster conversions
-- 📊 **Progress Tracking**: Rich progress bars show real-time conversion status
-  for each file
-- 💰 **Smart Amount Handling**: Automatically applies correct sign
-  transformations per transaction section (purchases are negative, payments are
-  positive, etc.)
-- 🎯 **Intelligent Section Detection**: Accurately identifies and categorizes
-  Purchases, Payments/Credits, Fees, and Secured Account transactions
-- 🏦 **Account Mapping**: Automatically maps transactions to correct accounts
-  (Varo Believe Card vs Varo Secured Account)
-- 📝 **Monarch-Ready Output**: Generates CSV files with the exact format
-  required by Monarch Money import
-- 🚀 **No External Dependencies**: Pure Python implementation with no system
-  dependencies required
+  configurable worker count
+- 📊 **Progress Tracking**: Rich progress bars with per-file status
+- 💰 **Smart Amount Handling**: Automatically applies correct sign per section
+  (purchases negative, payments positive, etc.)
+- 🎯 **Intelligent Section Detection**: Identifies and categorises Purchases,
+  Payments/Credits, Fees, and Secured Account transactions
+- 🏦 **Account Mapping**: Maps transactions to the correct account (Varo Believe
+  Card vs Varo Secured Account)
+- 📝 **Monarch-Ready Output**: CSV with the exact columns Monarch Money expects
 
 ## Installation
 
 ### Option 1: Standalone Executable (Recommended for Non-Technical Users)
 
-Download the pre-built executable for your operating system from the
+Download the pre-built executable for your OS from the
 [Releases page](https://github.com/blacksuan19/varo-to-monarch/releases):
 
 - **Windows**: `varo-to-monarch-windows.exe`
 - **macOS**: `varo-to-monarch-macos.app.zip` (extract and run)
 - **Linux**: `varo-to-monarch-linux`
 
-No installation required - just download and run!
+No installation required — just download and run.
 
-### Option 2: Install via pip (For Developers/CLI Users)
+### Option 2: Install via pip
 
 ```bash
 pip install varo-to-monarch
@@ -55,115 +51,108 @@ pip install .
 
 ## Usage
 
-### Graphical User Interface (GUI)
+### GUI
 
-**Using the standalone executable:**
+**Standalone executable:** double-click the downloaded file.
 
-Simply double-click the downloaded executable file.
-
-**Using the installed package:**
+**Installed package:**
 
 ```bash
 vtm-gui
 ```
 
-The GUI provides:
+The GUI lets you:
 
-1. **Folder selection**: Browse to select your folder containing Varo PDF
-   statements
-2. **Output file selection**: Choose where to save the output CSV (defaults to
-   `varo_monarch_combined.csv` in the input folder)
-3. **Advanced options** (optional):
-   - File pattern filter (e.g., `2024*.pdf` to process only 2024 statements)
-   - Number of parallel workers for faster processing
-   - Option to include/exclude source file names in the output
+1. Select the folder containing your Varo PDF statements
+2. Choose the output CSV path (defaults to `varo_monarch_combined.csv` in the
+   input folder)
+3. Optionally set a filename pattern, worker count, and whether to include the
+   source filename column
 
-Click **Convert to Monarch CSV** and watch the progress bar as your statements
-are processed!
+Click **Convert to Monarch CSV** and watch the progress bar.
 
-### Command Line Interface (CLI)
+### CLI
 
-**Basic Usage** - Convert all PDFs in a folder:
+**Basic usage** — convert all PDFs in a folder:
 
 ```bash
 vtm path/to/statements
 ```
 
-This will:
+Output is written to `path/to/statements/varo_monarch_combined.csv` by default.
 
-1. Find all PDF files in the specified directory
-2. Extract transactions from each statement
-3. Combine them into a single CSV file:
-   `path/to/statements/varo_monarch_combined.csv`
+**All options:**
 
-### Advanced Options
+```
+vtm [OPTIONS] [FOLDER]
 
-**Custom output file:**
+Arguments:
+  FOLDER  Directory containing Varo PDF statements
 
-```bash
-vtm path/to/statements --output path/to/output.csv
+Options:
+  -o, --output PATH               Output CSV file path
+  -p, --pattern TEXT              Glob pattern for PDFs (default: *.pdf)
+  -w, --workers INT               Parallel workers (default: auto)
+      --include-file-names /
+      --no-include-file-names     Include/exclude SourceFile column (default: include)
+  -h, --help                      Show this message and exit
 ```
 
-**Filter specific PDFs:**
+**Examples:**
 
 ```bash
-vtm path/to/statements --pattern "2024*.pdf"
+# Custom output path
+vtm ./statements --output ~/monarch_import.csv
+
+# Process only a specific statement
+vtm ./statements --pattern "2025-12.pdf"
+
+# Use 4 parallel workers
+vtm ./statements --workers 4
+
+# Omit the source filename column from output
+vtm ./statements --no-include-file-names
 ```
-
-**Parallel processing (faster for multiple files):**
-
-```bash
-vtm path/to/statements --workers 4
-```
-
-**Exclude source filename column:**
-
-```bash
-vtm path/to/statements --no-include-file-names
-```
-
-**Get help:**
-
-```bash
-vtm --help
-```
-
-### Which Interface Should I Use?
-
-- **Use the GUI** if you prefer a visual interface or are not comfortable with
-  command-line tools
-- **Use the CLI** if you want to automate conversions, integrate with scripts,
-  or prefer terminal-based workflows
 
 ## Output Format
 
-The generated CSV contains the following columns:
-
-- **Date**: Transaction date (MM/DD/YYYY format)
-- **Merchant Name**: Transaction description
-- **Account**: Either "Varo Believe Card" or "Varo Secured Account"
-- **Amount**: Transaction amount (negative for purchases/fees, positive for
-  payments/credits)
-- **SourceFile**: Original PDF filename (optional, can be excluded with
-  `--no-include-file-names` in CLI or unchecked in GUI)
+| Column          | Description                                                  |
+| --------------- | ------------------------------------------------------------ |
+| `Date`          | Transaction date (`MM/DD/YYYY`)                              |
+| `Merchant Name` | Full transaction description                                 |
+| `Account`       | `Varo Believe Card` or `Varo Secured Account`                |
+| `Amount`        | Signed amount (negative = debit, positive = credit)          |
+| `SourceFile`    | Source PDF filename (omitted with `--no-include-file-names`) |
 
 ## How It Works
 
-The tool uses a hybrid extraction strategy:
+The tool uses a two-pass hybrid extraction strategy:
 
-1. **Table Extraction (PyMuPDF)**: Detects and extracts transaction tables for
-   structured data
-2. **Text Parsing (pdfplumber)**: Fallback method for transactions that table
-   detection misses
-3. **Smart Deduplication**: Removes duplicate extractions while preserving
-   legitimate duplicate transactions
-4. **Section-Based Classification**: Assigns correct account and sign based on
-   transaction type:
-   - **Purchases**: Negative amounts → Varo Believe Card
-   - **Fees**: Negative amounts → Varo Believe Card
-   - **Payments and Credits**: Positive amounts → Varo Believe Card
-   - **Secured Account Transactions**: Based on description patterns → Varo
-     Secured Account
+1. **Table extraction (PyMuPDF)** — detects and extracts transaction tables
+   directly from the PDF structure. Handles Purchases, Fees, Payments and
+   Credits, and Secured Account Transactions sections.
+
+2. **Text parsing (pdfplumber)** — line-by-line fallback for transactions that
+   table detection misses. All pages are flattened into a single line list
+   before parsing so that multi-line descriptions split across page boundaries
+   are correctly merged.
+
+3. **Deduplication** — results from both passes are merged; rows already
+   captured by table extraction are not duplicated from the text pass.
+
+4. **Section-based classification** — each transaction is assigned the correct
+   account and amount sign based on which section it appears in:
+
+   | Section                      | Sign     | Account              |
+   | ---------------------------- | -------- | -------------------- |
+   | Purchases                    | negative | Varo Believe Card    |
+   | Fees                         | negative | Varo Believe Card    |
+   | Payments and Credits         | positive | Varo Believe Card    |
+   | Secured Account Transactions | from PDF | Varo Secured Account |
+
+5. **Post-processing** — description-based rules override section assignments
+   where needed (e.g. transfer descriptions always go to Varo Secured Account
+   regardless of which table they appear in).
 
 ## Supported Transaction Types
 
@@ -176,55 +165,53 @@ The tool uses a hybrid extraction strategy:
 ### Varo Secured Account
 
 - Transfers from Secured Account to Believe Card
-- Transfers from Secured Account to Checking Account (DDA)
-- Deposits into Secured Account (e.g., "Move Your Pay")
+  (`Trf from Vault to Charge C Bal`)
+- Transfers from Secured Account to Checking (`Transfer from Vault to DDA`)
+- Deposits into Secured Account (`Move Your Pay - Chk to Believe`)
 
 ## Requirements
 
 - Python 3.8 or higher
-- Internet connection for initial package installation
 
 ## Troubleshooting
 
 **No transactions extracted:**
 
-- Ensure your PDFs are actual Varo Bank statements
-- Check that PDFs are not password-protected or corrupted
+- Make sure the PDFs are genuine Varo Bank statements
+- Check that the files are not password-protected or corrupted
 
-**Missing some transactions:**
+**Missing transactions:**
 
-- The tool automatically handles multi-page statements
-- Try running with `--workers 1` to rule out concurrency issues
+- The tool handles multi-page statements automatically
+- Try `--workers 1` to rule out any concurrency issues
 
-**Incorrect amounts or accounts:**
+**Wrong amounts or accounts:**
 
-- File an issue on GitHub with a sample (redacted) statement
+- Open an issue on GitHub with a redacted sample statement
 
 ## Development
 
 ```bash
-# Clone the repository
+# Clone and install
 git clone https://github.com/blacksuan19/varo-to-monarch.git
 cd varo-to-monarch
-
-# Install in development mode
 pip install -e .
 
-# Build package
-python -m build
+# Version bump
+bumpver update --patch   # 0.4.0 → 0.4.1
+bumpver update --minor   # 0.4.0 → 0.5.0
 ```
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! Please submit a Pull Request.
 
 ## License
 
-This project is licensed under the GNU General Public License 3 - see the
-LICENSE file for details.
+GNU General Public License v3 — see [LICENSE](LICENSE) for details.
 
 ## Disclaimer
 
 This tool is not affiliated with, endorsed by, or connected to Varo Bank or
-Monarch Money. Use at your own risk. Always verify the accuracy of converted
-data before importing into Monarch Money.
+Monarch Money. Use at your own risk. Always verify converted data before
+importing into Monarch Money.
