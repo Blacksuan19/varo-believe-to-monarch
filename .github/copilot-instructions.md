@@ -75,10 +75,10 @@ uv pip install .
 bumpver update --patch  # 0.1.4 → 0.1.5
 
 # Run locally
-varo-to-monarch ./statements --workers 4 --output combined.csv
+vtm ./statements --workers 4 --output combined.csv
 
 # Quick test with sample PDF
-varo-to-monarch ./statements --pattern "7.pdf"
+vtm ./statements --pattern "7.pdf"
 ```
 
 ## Key Files
