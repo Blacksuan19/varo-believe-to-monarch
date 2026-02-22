@@ -1,7 +1,10 @@
 """Utility functions."""
+
 import os
 from pathlib import Path
 from typing import Any, Optional
+
+import pandas as pd
 
 from .constants import AMOUNT_DECIMAL_RE, DATE_RE
 
@@ -60,3 +63,27 @@ def is_probable_amount_token(token: str) -> bool:
 def find_pdfs(folder: Path, pattern: str) -> list[Path]:
     """Recursively find PDF files matching pattern."""
     return sorted(p for p in folder.rglob(pattern) if p.is_file())
+
+
+def latest_pdf_by_date(result: pd.DataFrame, pdfs: list[Path]) -> Path:
+    """Return the PDF whose latest transaction date is most recent.
+
+    Uses the Date column in *result* (already in MM/DD/YYYY format) grouped by
+    SourceFile so the answer is driven by statement content, not filesystem
+    metadata.  Falls back to the last entry in *pdfs* (alphabetically sorted)
+    if the lookup fails for any reason.
+    """
+    fallback = pdfs[-1]
+    try:
+        pdf_by_name = {p.name: p for p in pdfs}
+        latest_name = (
+            result.assign(
+                _d=pd.to_datetime(result["Date"], format="%m/%d/%Y", errors="coerce")
+            )
+            .groupby("SourceFile")["_d"]
+            .max()
+            .idxmax()
+        )
+        return pdf_by_name.get(latest_name, fallback)
+    except Exception:
+        return fallback

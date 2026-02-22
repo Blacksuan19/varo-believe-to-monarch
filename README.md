@@ -20,6 +20,11 @@ in seconds.
   Payments/Credits, Fees, and Secured Account transactions
 - 🏦 **Account Mapping**: Maps transactions to the correct account (Varo Believe
   Card vs Varo Secured Account)
+- 🏷️ **Auto-Categorization**: Secured Account transactions are automatically
+  tagged as `Transfer` in the Category column; credit card transactions are left
+  uncategorized for Monarch to classify
+- 📊 **Account Summary**: After each run the tool prints the exact balance and
+  limit values to enter when creating accounts in Monarch Money
 - 📝 **Monarch-Ready Output**: CSV with the exact columns Monarch Money expects
 
 ## Installation
@@ -69,7 +74,9 @@ The GUI lets you:
 3. Optionally set a filename pattern, worker count, and whether to include the
    source filename column
 
-Click **Convert to Monarch CSV** and watch the progress bar.
+Click **Convert to Monarch CSV** and watch the progress bar. Once complete, an
+**Account Summary** panel appears showing the exact balance and limit values to
+enter when creating accounts in Monarch Money.
 
 ### CLI
 
@@ -80,6 +87,8 @@ vtm path/to/statements
 ```
 
 Output is written to `path/to/statements/varo_monarch_combined.csv` by default.
+An account summary is printed after each run showing the exact values to enter
+when creating accounts in Monarch Money.
 
 **All options:**
 
@@ -116,13 +125,47 @@ vtm ./statements --no-include-file-names
 
 ## Output Format
 
-| Column          | Description                                                  |
-| --------------- | ------------------------------------------------------------ |
-| `Date`          | Transaction date (`MM/DD/YYYY`)                              |
-| `Merchant Name` | Full transaction description                                 |
-| `Account`       | `Varo Believe Card` or `Varo Secured Account`                |
-| `Amount`        | Signed amount (negative = debit, positive = credit)          |
-| `SourceFile`    | Source PDF filename (omitted with `--no-include-file-names`) |
+| Column          | Description                                                        |
+| --------------- | ------------------------------------------------------------------ |
+| `Date`          | Transaction date (`MM/DD/YYYY`)                                    |
+| `Merchant Name` | Full transaction description                                       |
+| `Category`      | `Transfer` for Secured Account transactions; empty for credit card |
+| `Account`       | `Varo Believe Card` or `Varo Secured Account`                      |
+| `Amount`        | Signed amount (negative = debit, positive = credit)                |
+| `SourceFile`    | Source PDF filename (omitted with `--no-include-file-names`)       |
+
+## Importing into Monarch Money
+
+> **Note:** CSV imports are available on **web only** (not the mobile app) and
+> **cannot be undone**. Test with a smaller file first if you're unsure. See
+> [Monarch's full import guide](https://help.monarch.com/hc/en-us/articles/4409682789908-Importing-Transaction-History-Manually)
+> for reference.
+
+1. On the Monarch web app, go to **Accounts** and click **+ Add Account**.
+2. Click **"Import transaction & balance history"**, then **"Import
+   transactions"**.
+3. Upload the generated CSV file.
+4. Monarch will auto-detect the column mappings (Date, Merchant Name, Account,
+   Amount) — confirm them and proceed.
+5. On the **"Assign CSV accounts to Monarch accounts"** screen you'll see two
+   entries. For each one, open the dropdown and choose **"Create a new
+   account"** with the appropriate type:
+
+   | CSV Account            | Account type to create      | Balance / Limit                                                                     |
+   | ---------------------- | --------------------------- | ----------------------------------------------------------------------------------- |
+   | `Varo Believe Card`    | **Credit Card**             | Current balance and credit limit — shown in the Account Summary printed by the tool |
+   | `Varo Secured Account` | **Checking** or **Savings** | Balance — shown in the Account Summary printed by the tool                          |
+
+6. Choose how to handle overlapping transactions:
+   - **Prioritize CSV** — replaces any existing transactions in the date range
+   - **Prioritize Monarch** — keeps existing data, only imports earlier missing
+     ones
+   - **Import all** — imports everything, may create duplicates
+
+7. Review the summary and click **Import transactions** to finish.
+
+> **Tip:** On repeat imports, select the existing Monarch accounts instead of
+> creating new ones to avoid duplicates.
 
 ## How It Works
 

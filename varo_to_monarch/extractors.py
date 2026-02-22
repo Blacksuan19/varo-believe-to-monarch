@@ -1,7 +1,8 @@
 """PDF extraction logic using PyMuPDF and pdfplumber."""
 
+import re
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import fitz  # PyMuPDF
 import pandas as pd
@@ -9,6 +10,72 @@ import pdfplumber
 
 from .constants import DATE_RE, SECTION_ORDER
 from .utils import clean, is_date, is_probable_amount_token, parse_amount
+
+
+def extract_account_summary(pdf_path: str) -> Optional[dict]:
+    """
+    Extract account summary figures from the first page of a Varo PDF statement.
+
+    Returns a dict with two keys:
+    - ``believe``: New Balance, Payments/Credits, Purchases, Fees, payment due info
+    - ``secured``: Beginning/Ending Balance, Debits, Credits
+
+    Returns None if the page doesn't look like a Varo statement summary.
+    """
+
+    def _find(text: str, pattern: str) -> str:
+        m = re.search(pattern, text, re.IGNORECASE)
+        return m.group(1) if m else ""
+
+    try:
+        with pdfplumber.open(pdf_path) as pdf:
+            first_page = pdf.pages[0]
+            w = first_page.width
+            h = first_page.height
+            mid = w / 2
+            left_text = first_page.crop((0, 0, mid, h)).extract_text() or ""
+            right_text = first_page.crop((mid, 0, w, h)).extract_text() or ""
+    except Exception:
+        return None
+
+    # Quick sanity-check: bail out if this doesn't look like the summary page
+    if (
+        "New Balance" not in left_text
+        and "Secured Account Ending Balance" not in right_text
+    ):
+        return None
+
+    believe: dict[str, str] = {}
+    secured: dict[str, str] = {}
+
+    # Account number from the column header
+    m = re.search(r"Summary for Believe Account\s+(\S+)", left_text, re.IGNORECASE)
+    believe["account_number"] = m.group(1) if m else ""
+
+    for key, pattern in [
+        ("previous_balance", r"Previous Balance\s+\$?([\d,]+\.\d{2})"),
+        ("payments_credits", r"Payments/Credits\s+-?\$?([\d,]+\.\d{2})"),
+        ("purchases", r"Purchases\s+\$?([\d,]+\.\d{2})"),
+        ("fees", r"Fees\s+\$?([\d,]+\.\d{2})"),
+        ("new_balance", r"New Balance\s+\$?([\d,]+\.\d{2})"),
+        ("min_amount_due", r"Minimum Amount Due\s+\$?([\d,]+\.\d{2})"),
+        ("payment_due_amount", r"Payment Due Amount\s+\$?([\d,]+\.\d{2})"),
+        ("payment_due_date", r"Payment Due Date\s+(\d{2}/\d{2}/\d{4})"),
+    ]:
+        believe[key] = _find(left_text, pattern)
+
+    for key, pattern in [
+        (
+            "beginning_balance",
+            r"Secured Account Beginning Balance\s+\$?([\d,]+\.\d{2})",
+        ),
+        ("debits", r"Secured Account Debits\s+-?\$?([\d,]+\.\d{2})"),
+        ("credits", r"Secured Account Credits\s+\$?([\d,]+\.\d{2})"),
+        ("ending_balance", r"Secured Account Ending Balance\s+\$?([\d,]+\.\d{2})"),
+    ]:
+        secured[key] = _find(right_text, pattern)
+
+    return {"believe": believe, "secured": secured}
 
 
 def is_secured_account_transaction(description: str) -> bool:

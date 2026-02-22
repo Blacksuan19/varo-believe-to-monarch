@@ -8,6 +8,7 @@ import click
 import pandas as pd
 import typer
 from rich.console import Console
+from rich.panel import Panel
 from rich.progress import (
     BarColumn,
     Progress,
@@ -15,10 +16,11 @@ from rich.progress import (
     TextColumn,
     TimeElapsedColumn,
 )
+from rich.table import Table
 
-from .extractors import extract_transactions_from_pdf
+from .extractors import extract_account_summary, extract_transactions_from_pdf
 from .processing import finalize_monarch
-from .utils import default_workers, find_pdfs
+from .utils import default_workers, find_pdfs, latest_pdf_by_date
 
 app = typer.Typer(
     help="Convert Varo statements to Monarch CSV.",
@@ -26,6 +28,57 @@ app = typer.Typer(
     context_settings={"help_option_names": ["-h", "--help"]},
 )
 console = Console()
+
+
+def _print_account_summary(con: Console, summary: dict, source_name: str) -> None:
+    """Print a Rich panel showing account balances for Monarch account creation."""
+    b = summary["believe"]
+    s = summary["secured"]
+
+    acct = f" ({b['account_number']})" if b.get("account_number") else ""
+    ending = s.get("ending_balance", "")
+
+    tbl = Table(show_header=True, header_style="bold cyan", box=None, padding=(0, 2))
+    tbl.add_column("Account", style="bold")
+    tbl.add_column("Monarch type")
+    tbl.add_column("Field", style="dim")
+    tbl.add_column("Value", style="green")
+
+    # Believe Card rows
+    tbl.add_row(
+        f"Varo Believe Card{acct}",
+        "Credit Card",
+        "Current Balance",
+        f"${b.get('new_balance', '?')}",
+    )
+    tbl.add_row("", "", "Credit Limit", f"${ending or '?'} (= Secured ending balance)")
+    if b.get("payment_due_amount") and b.get("payment_due_date"):
+        tbl.add_row(
+            "",
+            "",
+            "Payment Due",
+            f"${b['payment_due_amount']} by {b['payment_due_date']}",
+        )
+
+    tbl.add_section()
+
+    # Secured Account rows
+    tbl.add_row(
+        "Varo Secured Account",
+        "Checking / Savings",
+        "Balance",
+        f"${ending or '?'}",
+    )
+
+    con.print()
+    con.print(
+        Panel(
+            tbl,
+            title=f"[bold]Account Summary[/bold] [dim]({source_name})[/dim]",
+            subtitle="[dim]Use these values when adding accounts in Monarch Money[/dim]",
+            border_style="cyan",
+        )
+    )
 
 
 @app.command()
@@ -99,6 +152,12 @@ def convert(
 
     result.to_csv(out_csv, index=False)
     console.print(f"[bold green]✓ {len(result)} transactions → {out_csv}[/bold green]")
+
+    # Show account summary from the PDF with the most recent transactions.
+    latest_pdf = latest_pdf_by_date(combined, pdfs)
+    summary = extract_account_summary(str(latest_pdf))
+    if summary:
+        _print_account_summary(console, summary, latest_pdf.name)
 
     if failures:
         console.print(f"[yellow]{len(failures)} file(s) failed[/yellow]")

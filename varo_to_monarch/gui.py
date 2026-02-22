@@ -6,7 +6,7 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 
 import pandas as pd
-from PySide6.QtCore import QObject, QThread, Signal, Slot
+from PySide6.QtCore import QObject, Qt, QThread, Signal, Slot
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -23,9 +23,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from .extractors import extract_transactions_from_pdf
+from .extractors import extract_account_summary, extract_transactions_from_pdf
 from .processing import finalize_monarch
-from .utils import default_workers, find_pdfs
+from .utils import default_workers, find_pdfs, latest_pdf_by_date
 
 
 class Worker(QObject):
@@ -34,6 +34,7 @@ class Worker(QObject):
     progress = Signal(int, int, str)  # completed, total, status
     finished = Signal(str, str, int)  # result_msg, details, failures_count
     error = Signal(str)
+    summary = Signal(dict)  # account summary dict
 
     def __init__(
         self,
@@ -117,6 +118,12 @@ class Worker(QObject):
             details = f"Saved to: {self.output}"
             if failures:
                 details += f"\n\n⚠ {len(failures)} file(s) failed."
+
+            # Emit account summary from the PDF with the most recent transactions.
+            latest_pdf = latest_pdf_by_date(combined, pdfs)
+            acct_summary = extract_account_summary(str(latest_pdf))
+            if acct_summary:
+                self.summary.emit(acct_summary)
 
             self.finished.emit(msg, details, len(failures))
 
@@ -204,6 +211,17 @@ class VaroToMonarchGUI(QMainWindow):
         self.progress_bar = QProgressBar()
         layout.addWidget(self.progress_bar)
 
+        # Account Summary (shown after conversion)
+        self.summary_group = QGroupBox("Account Summary — Use These Values in Monarch")
+        self.summary_group.setVisible(False)
+        summary_layout = QVBoxLayout(self.summary_group)
+        self.summary_label = QLabel()
+        self.summary_label.setWordWrap(True)
+        self.summary_label.setTextFormat(Qt.TextFormat.RichText)
+        self.summary_label.setStyleSheet("padding: 4px;")
+        summary_layout.addWidget(self.summary_label)
+        layout.addWidget(self.summary_group)
+
         # Action Button
         self.convert_btn = QPushButton("Convert to Monarch CSV")
         self.convert_btn.setMinimumHeight(50)
@@ -276,6 +294,7 @@ class VaroToMonarchGUI(QMainWindow):
         self.worker.finished.connect(self._on_finished)
         self.worker.error.connect(self._on_error)
         self.worker.progress.connect(self._on_progress)
+        self.worker.summary.connect(self._on_summary)
 
         # Cleanup signals
         self.worker.finished.connect(self.thread.quit)
@@ -303,6 +322,33 @@ class VaroToMonarchGUI(QMainWindow):
         if failures > 0:
             status_text += f" (⚠ {failures} files failed)"
         self.status_label.setText(status_text)
+
+    @Slot(dict)
+    def _on_summary(self, summary: dict):
+        b = summary["believe"]
+        s = summary["secured"]
+
+        acct = f" ({b['account_number']}" + ")" if b.get("account_number") else ""
+        ending = s.get("ending_balance", "?")
+
+        lines = [
+            f"<b>Varo Believe Card{acct}</b> &mdash; <i>Credit Card</i>",
+            f"&nbsp;&nbsp;Current Balance: <b>${b.get('new_balance', '?')}</b>",
+            f"&nbsp;&nbsp;Credit Limit: <b>${ending}</b> (= Secured ending balance)",
+        ]
+        if b.get("payment_due_amount") and b.get("payment_due_date"):
+            lines.append(
+                f"&nbsp;&nbsp;Payment Due: <b>${b['payment_due_amount']}</b>"
+                f" by <b>{b['payment_due_date']}</b>"
+            )
+        lines += [
+            "",
+            "<b>Varo Secured Account</b> &mdash; <i>Checking / Savings</i>",
+            f"&nbsp;&nbsp;Balance: <b>${ending}</b>",
+        ]
+
+        self.summary_label.setText("<br>".join(lines))
+        self.summary_group.setVisible(True)
 
     @Slot(str)
     def _on_error(self, err_msg):
