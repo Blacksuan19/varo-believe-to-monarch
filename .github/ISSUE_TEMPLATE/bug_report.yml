@@ -1,0 +1,84 @@
+name: Bug Report
+description: Something isn't parsing correctly or the tool crashed
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. Please fill out as much detail as you can — PDF parsing issues are often very specific to statement layout, so the more context the better.
+
+  - type: dropdown
+    id: install_method
+    attributes:
+      label: How did you install the tool?
+      options:
+        - Standalone executable (GUI)
+        - pip install
+        - From source
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Run `vtm --version` or check the title bar of the GUI
+      placeholder: "e.g. 1.0.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System
+      options:
+        - Windows
+        - macOS (Apple Silicon)
+        - macOS (Intel)
+        - Linux
+    validations:
+      required: true
+
+  - type: dropdown
+    id: section
+    attributes:
+      label: Which transaction section is affected?
+      description: Leave blank if the tool crashed before producing any output
+      multiple: true
+      options:
+        - Purchases
+        - Payments and Credits
+        - Fees
+        - Secured Account Transactions
+        - Not sure / all sections
+        - Tool crashed before output
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the wrong behavior — missing transactions, wrong amounts, wrong sign, duplicate rows, crash, etc.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: error
+    attributes:
+      label: Error message or log output
+      description: Paste any error text here. CLI users can run with `--workers 1` to get cleaner output.
+      render: text
+
+  - type: checkboxes
+    id: pdf_share
+    attributes:
+      label: PDF sharing
+      description: A redacted/sanitized sample PDF (with personal info removed) helps diagnose layout issues. You can attach one below or share a link.
+      options:
+        - label: I can provide a redacted sample PDF

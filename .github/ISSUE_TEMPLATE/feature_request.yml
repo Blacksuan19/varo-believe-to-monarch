@@ -1,0 +1,37 @@
+name: Feature Request
+description: Suggest an improvement or new capability
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the workflow or limitation you're running into.
+      placeholder: "e.g. I have to manually set the Category for every Purchases transaction because..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Describe the solution you'd like
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you've considered
+      description: Any workarounds you're currently using?
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which area does this relate to?
+      options:
+        - PDF extraction / parsing
+        - CSV output format
+        - GUI
+        - CLI
+        - Account summary
+        - Other
