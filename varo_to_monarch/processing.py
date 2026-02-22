@@ -31,6 +31,7 @@ def finalize_monarch(df: pd.DataFrame, include_file_names: bool) -> pd.DataFrame
     df["Category"] = df["Account"].apply(
         lambda a: "Transfer" if a == "Varo Secured Account" else ""
     )
+    df["Tags"] = "vtm-import"
 
     cols = [
         "Date",
@@ -38,6 +39,7 @@ def finalize_monarch(df: pd.DataFrame, include_file_names: bool) -> pd.DataFrame
         "Category",
         "Account",
         "Amount",
+        "Tags",
     ]
     if include_file_names:
         cols.append("SourceFile")

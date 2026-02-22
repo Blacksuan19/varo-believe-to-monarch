@@ -132,6 +132,7 @@ vtm ./statements --no-include-file-names
 | `Category`      | `Transfer` for Secured Account transactions; empty for credit card |
 | `Account`       | `Varo Believe Card` or `Varo Secured Account`                      |
 | `Amount`        | Signed amount (negative = debit, positive = credit)                |
+| `Tags`          | Always `vtm-import` — identifies transactions added by this tool   |
 | `SourceFile`    | Source PDF filename (omitted with `--no-include-file-names`)       |
 
 ## Importing into Monarch Money
