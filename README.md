@@ -1,5 +1,7 @@
 # Varo Believe to Monarch
 
+[![PyPI](https://img.shields.io/pypi/v/varo-to-monarch)](https://pypi.org/project/varo-to-monarch/)
+
 Convert **Varo Believe** credit card PDF statements to Monarch Money CSV format.
 No more manual data entry — point the tool at your statements and get a
 Monarch-ready CSV in seconds.
@@ -9,9 +11,9 @@ Monarch-ready CSV in seconds.
 > (the secured credit card) lacks Plaid support, so transactions must be
 > imported manually from the monthly PDF statement.
 
-| GUI                                    | CLI                                    |
-| -------------------------------------- | -------------------------------------- |
-| ![GUI screenshot](screenshots/gui.png) | ![CLI screenshot](screenshots/cli.png) |
+| GUI                                                                                                                            | CLI                                                                                                                            |
+| ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| ![GUI screenshot](https://raw.githubusercontent.com/Blacksuan19/varo-believe-to-monarch/refs/heads/master/screenshots/gui.png) | ![CLI screenshot](https://raw.githubusercontent.com/Blacksuan19/varo-believe-to-monarch/refs/heads/master/screenshots/cli.png) |
 
 ## Features
 
@@ -61,8 +63,8 @@ pip install varo-to-monarch
 ### Option 3: From Source
 
 ```bash
-git clone https://github.com/blacksuan19/varo-to-monarch.git
-cd varo-to-monarch
+git clone https://github.com/Blacksuan19/varo-believe-to-monarch.git
+cd varo-believe-to-monarch
 pip install .
 ```
 
@@ -250,8 +252,8 @@ The tool uses a two-pass hybrid extraction strategy:
 
 ```bash
 # Clone and install
-git clone https://github.com/blacksuan19/varo-to-monarch.git
-cd varo-to-monarch
+git clone https://github.com/Blacksuan19/varo-believe-to-monarch.git
+cd varo-believe-to-monarch
 pip install -e .
 
 # Version bump
