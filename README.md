@@ -52,6 +52,25 @@ Download the pre-built executable for your OS from the
 
 No installation required — just download and run.
 
+> **macOS: opening an unsigned app**
+>
+> Because the app isn't notarized by Apple, macOS will block it the first time.
+> To open it:
+>
+> 1. Extract the `.zip` and double-click `VaroToMonarch.app` — you'll see a
+>    "cannot be opened" alert. Click **Done** (not Move to Trash).
+> 2. Open **System Settings → Privacy & Security** and scroll down to the
+>    Security section.
+> 3. You'll see a message like _"VaroToMonarch was blocked"_ — click **Open
+>    Anyway**.
+> 4. A final confirmation prompt appears — click **Open**.
+>
+> You only need to do this once. After that, double-clicking the app works
+> normally. This is standard macOS behavior for any app downloaded outside the
+> App Store — see
+> [Apple's documentation](https://support.apple.com/en-us/102445) for more
+> details.
+
 ### Option 2: Install via pip [![PyPI](https://img.shields.io/pypi/v/varo-to-monarch)](https://pypi.org/project/varo-to-monarch/)
 
 ```bash
