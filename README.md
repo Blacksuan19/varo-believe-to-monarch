@@ -1,7 +1,5 @@
 # Varo Believe to Monarch
 
-[![PyPI](https://img.shields.io/pypi/v/varo-to-monarch)](https://pypi.org/project/varo-to-monarch/)
-
 Convert **Varo Believe** credit card PDF statements to Monarch Money CSV format.
 No more manual data entry — point the tool at your statements and get a
 Monarch-ready CSV in seconds.
@@ -54,7 +52,7 @@ Download the pre-built executable for your OS from the
 
 No installation required — just download and run.
 
-### Option 2: Install via pip
+### Option 2: Install via pip [![PyPI](https://img.shields.io/pypi/v/varo-to-monarch)](https://pypi.org/project/varo-to-monarch/)
 
 ```bash
 pip install varo-to-monarch
@@ -274,3 +272,7 @@ GNU General Public License v3 — see [LICENSE](LICENSE) for details.
 This tool is not affiliated with, endorsed by, or connected to Varo Bank or
 Monarch Money. Use at your own risk. Always verify converted data before
 importing into Monarch Money.
+
+## Acknowledgments
+
+Thanks to **leetmastah** for testing the Windows and macOS binaries.
