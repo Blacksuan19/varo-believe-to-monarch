@@ -4,6 +4,10 @@ Convert Varo Bank PDF statements to Monarch Money CSV format. No more manual
 data entry — point the tool at your Varo statements and get a Monarch-ready CSV
 in seconds.
 
+| GUI                                    | CLI                                    |
+| -------------------------------------- | -------------------------------------- |
+| ![GUI screenshot](screenshots/gui.png) | ![CLI screenshot](screenshots/cli.png) |
+
 ## Features
 
 - 🖥️ **User-Friendly GUI**: Graphical interface for non-technical users (also
@@ -16,7 +20,7 @@ in seconds.
 - 📊 **Progress Tracking**: Rich progress bars with per-file status
 - 💰 **Smart Amount Handling**: Automatically applies correct sign per section
   (purchases negative, payments positive, etc.)
-- 🎯 **Intelligent Section Detection**: Identifies and categorises Purchases,
+- 🎯 **Intelligent Section Detection**: Identifies and categorizes Purchases,
   Payments/Credits, Fees, and Secured Account transactions
 - 🏦 **Account Mapping**: Maps transactions to the correct account (Varo Believe
   Card vs Varo Secured Account)
@@ -92,7 +96,7 @@ when creating accounts in Monarch Money.
 
 **All options:**
 
-```
+```bash
 vtm [OPTIONS] [FOLDER]
 
 Arguments:
