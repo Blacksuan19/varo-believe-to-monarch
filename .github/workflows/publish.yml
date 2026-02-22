@@ -49,8 +49,10 @@ jobs:
         include:
           - os: windows-latest
             ARTIFACT_NAME: varo-to-monarch-windows.exe
+          - os: macos-13
+            ARTIFACT_NAME: varo-to-monarch-macos-intel.app.zip
           - os: macos-latest
-            ARTIFACT_NAME: varo-to-monarch-macos.app.zip
+            ARTIFACT_NAME: varo-to-monarch-macos-apple-silicon.app.zip
           - os: ubuntu-latest
             ARTIFACT_NAME: varo-to-monarch-linux
 
@@ -79,7 +81,7 @@ jobs:
         run: mv dist/varo-to-monarch dist/${{ matrix.ARTIFACT_NAME }}
 
       - name: Zip Bundle (macOS)
-        if: matrix.os == 'macos-latest'
+        if: runner.os == 'macOS'
         run: |
           cd dist
           zip -r ${{ matrix.ARTIFACT_NAME }} VaroToMonarch.app

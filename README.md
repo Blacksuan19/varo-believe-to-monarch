@@ -44,7 +44,10 @@ Download the pre-built executable for your OS from the
 [Releases page](https://github.com/blacksuan19/varo-to-monarch/releases):
 
 - **Windows**: `varo-to-monarch-windows.exe`
-- **macOS**: `varo-to-monarch-macos.app.zip` (extract and run)
+- **macOS (Apple Silicon)**: `varo-to-monarch-macos-apple-silicon.app.zip`
+  (M1/M2/M3/M4, extract and run)
+- **macOS (Intel)**: `varo-to-monarch-macos-intel.app.zip` (pre-2020 Macs,
+  extract and run)
 - **Linux**: `varo-to-monarch-linux`
 
 No installation required — just download and run.
