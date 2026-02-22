@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "varo-to-monarch"
-version = "0.4.8"
+version = "0.4.9"
 description = "Convert Varo Believe credit card PDF statements to Monarch Money CSV format"
 readme = "README.md"
 requires-python = ">=3.8"
@@ -42,7 +42,7 @@ packages = ["varo_to_monarch"]
 
 
 [tool.bumpver]
-current_version = "0.4.8"
+current_version = "0.4.9"
 version_pattern = "MAJOR.MINOR.PATCH"
 commit_message = "Bump version {old_version} -> {new_version}"
 commit = true
