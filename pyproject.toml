@@ -11,7 +11,7 @@ requires-python = ">=3.8"
 authors = [{ name = "blacksuan19", email = "py@aolabs.dev" }]
 keywords = ["varo", "monarch", "bank", "statement", "pdf", "csv", "converter"]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: End Users/Desktop",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.8",
@@ -23,15 +23,7 @@ classifiers = [
     "Topic :: Utilities",
 ]
 
-dependencies = [
-    "pymupdf",
-    "pandas",
-    "pdfplumber",
-    "typer",
-    "rich",
-    "pyside6",
-    "pymupdf_layout",
-]
+dependencies = ["pymupdf", "pandas", "pdfplumber", "typer", "rich", "pyside6"]
 
 [project.optional-dependencies]
 dev = ["black", "ruff", "mypy", "build", "bumpver", "pyinstaller"]
