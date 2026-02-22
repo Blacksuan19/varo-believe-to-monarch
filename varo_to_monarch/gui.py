@@ -139,7 +139,7 @@ class VaroToMonarchGUI(QMainWindow):
 
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Varo to Monarch Converter")
+        self.setWindowTitle("Varo Believe to Monarch Converter")
         self.setGeometry(100, 100, 700, 500)
 
         # Main widget & layout
@@ -150,13 +150,13 @@ class VaroToMonarchGUI(QMainWindow):
         layout.setContentsMargins(20, 20, 20, 20)
 
         # Title
-        title = QLabel("Varo to Monarch Converter")
+        title = QLabel("Varo Believe to Monarch Converter")
         title.setStyleSheet("font-size: 24px; font-weight: bold;")
         layout.addWidget(title)
 
         # Description
         desc_label = QLabel(
-            "Convert Varo Bank PDF statements to Monarch Money-compatible CSV format."
+            "Convert Varo Believe credit card PDF statements to Monarch Money-compatible CSV format."
         )
         desc_label.setWordWrap(True)
         layout.addWidget(desc_label)

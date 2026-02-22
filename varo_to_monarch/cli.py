@@ -23,7 +23,7 @@ from .processing import finalize_monarch
 from .utils import default_workers, find_pdfs, latest_pdf_by_date
 
 app = typer.Typer(
-    help="Convert Varo statements to Monarch CSV.",
+    help="Convert Varo Believe credit card statements to Monarch CSV.",
     no_args_is_help=True,
     context_settings={"help_option_names": ["-h", "--help"]},
 )
@@ -94,10 +94,10 @@ def convert(
         "--include-file-names/--no-include-file-names",
     ),
 ):
-    """Convert Varo Bank PDF statements to Monarch Money CSV format.
+    """Convert Varo Believe credit card PDF statements to Monarch Money CSV format.
 
     Args:
-        folder: Directory containing Varo PDF statements
+        folder: Directory containing Varo Believe PDF statements
         output: Output CSV file path (default: <folder>/varo_monarch_combined.csv)
         pattern: Glob pattern for PDF files (default: *.pdf)
         workers: Number of parallel workers (default: auto-detect)
