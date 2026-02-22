@@ -29,9 +29,9 @@ dependencies = ["pymupdf", "pandas", "pdfplumber", "typer", "rich", "pyside6"]
 dev = ["black", "ruff", "mypy", "build", "bumpver", "pyinstaller"]
 
 [project.urls]
-Homepage = "https://github.com/blacksuan19/varo-to-monarch"
-Repository = "https://github.com/blacksuan19/varo-to-monarch"
-Issues = "https://github.com/blacksuan19/varo-to-monarch/issues"
+Homepage = "https://github.com/Blacksuan19/varo-believe-to-monarch"
+Repository = "https://github.com/Blacksuan19/varo-believe-to-monarch"
+Issues = "https://github.com/Blacksuan19/varo-believe-to-monarch/issues"
 
 [project.scripts]
 vtm = "varo_to_monarch.cli:main"

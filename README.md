@@ -41,7 +41,7 @@ Monarch-ready CSV in seconds.
 ### Option 1: Standalone Executable (Recommended for Non-Technical Users)
 
 Download the pre-built executable for your OS from the
-[Releases page](https://github.com/blacksuan19/varo-to-monarch/releases):
+[Releases page](https://github.com/Blacksuan19/varo-believe-to-monarch/releases):
 
 - **Windows**: `varo-to-monarch-windows.exe`
 - **macOS (Apple Silicon)**: `varo-to-monarch-macos-apple-silicon.app.zip`
