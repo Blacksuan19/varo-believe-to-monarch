@@ -1,8 +1,13 @@
-# Varo to Monarch
+# Varo Believe to Monarch
 
-Convert Varo Bank PDF statements to Monarch Money CSV format. No more manual
-data entry — point the tool at your Varo statements and get a Monarch-ready CSV
-in seconds.
+Convert **Varo Believe** credit card PDF statements to Monarch Money CSV format.
+No more manual data entry — point the tool at your statements and get a
+Monarch-ready CSV in seconds.
+
+> **Why Varo Believe specifically?** Varo's regular checking and savings
+> accounts connect to Monarch Money directly via Plaid. Only **Varo Believe**
+> (the secured credit card) lacks Plaid support, so transactions must be
+> imported manually from the monthly PDF statement.
 
 | GUI                                    | CLI                                    |
 | -------------------------------------- | -------------------------------------- |
