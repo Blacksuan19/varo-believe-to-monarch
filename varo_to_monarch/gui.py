@@ -161,7 +161,10 @@ class VaroToMonarchGUI(QMainWindow):
         desc_label.setWordWrap(True)
         layout.addWidget(desc_label)
 
-        # Input Folder
+        # Offline notice
+        offline_label = QLabel("🔒 100% offline — your data never leaves this machine")
+        offline_label.setStyleSheet("color: green; font-size: 11px;")
+        layout.addWidget(offline_label)
         input_group = QGroupBox("Input")
         input_layout = QGridLayout(input_group)
         input_layout.addWidget(QLabel("PDF Folder:"), 0, 0)

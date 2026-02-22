@@ -103,6 +103,8 @@ def convert(
         workers: Number of parallel workers (default: auto-detect)
         include_file_names: Include file names column in output CSV
     """
+    console.print("[dim]🔒 100% offline — your data never leaves this machine[/dim]")
+
     if folder is None:
         typer.echo(click.get_current_context().get_help())
         raise typer.Exit(0)
@@ -111,7 +113,6 @@ def convert(
     pdfs = find_pdfs(folder, pattern)
     if not pdfs:
         raise typer.BadParameter(f"No PDFs found matching '{pattern}' in {folder}")
-
     console.print(f"[bold]Found {len(pdfs)} PDF(s)[/bold]")
     console.print(f"Output: {out_csv}")
 
