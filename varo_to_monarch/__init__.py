@@ -4,7 +4,7 @@ from .cli import app, convert
 from .extractors import extract_transactions_from_pdf
 from .processing import finalize_monarch
 
-__version__ = "0.4.5"
+__version__ = "0.4.6"
 __all__ = [
     "app",
     "convert",
