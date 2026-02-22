@@ -141,8 +141,9 @@ vtm ./statements --no-include-file-names
 
 ## Importing into Monarch Money
 
-> **Note:** CSV imports are available on **web only** (not the mobile app) and
-> **cannot be undone**. Test with a smaller file first if you're unsure. See
+> **Note:** CSV imports are available on **web only** (not the mobile app). If
+> you need to undo an import, delete the account in Monarch — it will offer to
+> remove the imported transactions at that point. See
 > [Monarch's full import guide](https://help.monarch.com/hc/en-us/articles/4409682789908-Importing-Transaction-History-Manually)
 > for reference.
 
