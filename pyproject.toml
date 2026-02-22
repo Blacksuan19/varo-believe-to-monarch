@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "varo-to-monarch"
 version = "0.4.7"
-description = "Convert Varo Bank PDF statements to Monarch Money CSV format"
+description = "Convert Varo Believe credit card PDF statements to Monarch Money CSV format"
 readme = "README.md"
 requires-python = ">=3.8"
 authors = [{ name = "blacksuan19", email = "py@aolabs.dev" }]
