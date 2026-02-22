@@ -28,10 +28,14 @@ def finalize_monarch(df: pd.DataFrame, include_file_names: bool) -> pd.DataFrame
     ]
 
     df["Merchant Name"] = df["Merchant"]
+    df["Category"] = df["Account"].apply(
+        lambda a: "Transfer" if a == "Varo Secured Account" else ""
+    )
 
     cols = [
         "Date",
         "Merchant Name",
+        "Category",
         "Account",
         "Amount",
     ]
